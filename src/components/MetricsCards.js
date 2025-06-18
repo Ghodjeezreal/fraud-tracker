@@ -45,25 +45,31 @@ export default function MetricsCards() {
         })
         .catch((err) => {
           console.error("Metrics fetch failed", err);
-          if (!hasLoadedOnce) setError(true); // only show toast if first time fails
+          if (!hasLoadedOnce) setError(true);
           setIsLoading(false);
           setMetrics({ total: 0, flagged: 0, blocked: 0, approved: 0 });
           setTimeout(() => setError(false), 4000);
         });
     };
 
-    fetchMetrics(true); // Initial load
-    interval = setInterval(() => fetchMetrics(false), 10000); // Every 10 sec
+    fetchMetrics(true);
+    interval = setInterval(() => fetchMetrics(false), 10000);
 
     return () => clearInterval(interval);
   }, [hasLoadedOnce]);
 
+  // 🧠 FIX: Move hooks outside of array
+  const total = useCountUp(metrics?.total || 0);
+  const flagged = useCountUp(metrics?.flagged || 0);
+  const blocked = useCountUp(metrics?.blocked || 0);
+  const approved = useCountUp(metrics?.approved || 0);
+
   const metricCards = metrics
     ? [
-        { label: "Total Transactions", value: useCountUp(metrics.total), color: "text-blue-600" },
-        { label: "Flagged", value: useCountUp(metrics.flagged), color: "text-red-500" },
-        { label: "Blocked", value: useCountUp(metrics.blocked), color: "text-gray-600" },
-        { label: "Approved", value: useCountUp(metrics.approved), color: "text-green-500" },
+        { label: "Total Transactions", value: total, color: "text-blue-600" },
+        { label: "Flagged", value: flagged, color: "text-red-500" },
+        { label: "Blocked", value: blocked, color: "text-gray-600" },
+        { label: "Approved", value: approved, color: "text-green-500" },
       ]
     : Array(4).fill({});
 
