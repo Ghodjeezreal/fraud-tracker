@@ -1,11 +1,6 @@
 /* src/components/TransactionsTable.js */
 import React, { useEffect, useState } from 'react';
 
-const STATUS_COLORS = {
-  approved: 'bg-green-100 text-green-700',
-  flagged:  'bg-yellow-100 text-yellow-800',
-  blocked:  'bg-red-100 text-red-700',
-};
 const STATUS_STYLES = {
   approved: {
     color: 'bg-green-100 text-green-700',
@@ -20,12 +15,12 @@ const STATUS_STYLES = {
     icon: '❌',
   },
 };
-export default function TransactionsTable() {
-  const [rows, setRows]           = useState([]);
-  const [filter, setFilter]       = useState('all');      // all | approved | flagged | blocked
-  const [error, setError]         = useState(false);
 
-  /* fetch every 10 s */
+export default function TransactionsTable() {
+  const [rows, setRows]     = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [error, setError]   = useState(false);
+
   useEffect(() => {
     const fetchData = () => {
       fetch('https://tcscourierco.org/api/transactions.php')
@@ -40,22 +35,19 @@ export default function TransactionsTable() {
         });
     };
 
-    fetchData();                              // first load
-    const id = setInterval(fetchData, 10000); // refresh
+    fetchData();
+    const id = setInterval(fetchData, 10000);
     return () => clearInterval(id);
   }, []);
 
-  /* optional filtering */
-  const displayed = rows.filter(r => 
+  const displayed = rows.filter(r =>
     filter === 'all' ? true : r.status === filter
   );
 
   return (
     <div className="bg-white p-4 rounded shadow">
-      {/* Header / filter */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
         <h2 className="text-lg font-semibold">Recent Transactions</h2>
-
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
@@ -68,14 +60,12 @@ export default function TransactionsTable() {
         </select>
       </div>
 
-      {/* Error banner */}
       {error && (
         <div className="mb-4 rounded bg-red-100 text-red-700 p-2 text-sm">
           🔴 Unable to load transactions — please try again later.
         </div>
       )}
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
@@ -87,26 +77,28 @@ export default function TransactionsTable() {
             </tr>
           </thead>
           <tbody>
-  {displayed.slice(0, 10).map(txn => (
-  <tr key={txn.id} className="border-t hover:bg-gray-50">
-    <td className="p-3 whitespace-nowrap">
-      {new Date(txn.timestamp).toLocaleString()}
-    </td>
-    <td className="p-3">{txn.recipient || '—'}</td>
-    <td className="p-3">{Number(txn.amount).toLocaleString()}</td>
-    <td className="p-3">
-      <span
-  className={
-    `px-2 py-0.5 rounded text-xs font-medium capitalize flex items-center gap-1 ` +
-    (STATUS_STYLES[txn.status]?.color ?? 'bg-gray-200 text-gray-700')
-  }
->
-  {STATUS_STYLES[txn.status]?.icon} {txn.status}
-</span>
-    </td>
-  </tr>
-))}
-            {/* Empty-state row */}
+            {displayed.slice(0, 10).map(txn => {
+              const key = txn.status?.toLowerCase().trim();
+              const style = STATUS_STYLES[key] || {
+                color: 'bg-gray-200 text-gray-700',
+                icon: '❓',
+              };
+              return (
+                <tr key={txn.id} className="border-t hover:bg-gray-50">
+                  <td className="p-3 whitespace-nowrap">
+                    {new Date(txn.timestamp).toLocaleString()}
+                  </td>
+                  <td className="p-3">{txn.recipient || '—'}</td>
+                  <td className="p-3">{Number(txn.amount).toLocaleString()}</td>
+                  <td className="p-3">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium capitalize ${style.color}`}>
+                      <span>{style.icon}</span>
+                      {txn.status}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
             {displayed.length === 0 && !error && (
               <tr>
                 <td colSpan={4} className="p-4 text-center text-gray-500">
