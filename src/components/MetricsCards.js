@@ -5,6 +5,9 @@ export default function MetricsCards() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
+  let interval;
+
+  const fetchMetrics = () => {
     fetch("https://tcscourierco.org/api/metrics.php")
       .then((res) => res.json())
       .then((data) => {
@@ -15,9 +18,15 @@ export default function MetricsCards() {
         console.error("Metrics fetch failed", err);
         setError(true);
         setMetrics({ total: 0, flagged: 0, blocked: 0, approved: 0 });
-        setTimeout(() => setError(false), 4000); // Auto-hide toast
+        setTimeout(() => setError(false), 4000);
       });
-  }, []);
+  };
+
+  fetchMetrics(); // Fetch once immediately
+  interval = setInterval(fetchMetrics, 10000); // Then every 10 sec
+
+  return () => clearInterval(interval); // Cleanup
+}, []);
 
   const metricCards = metrics
     ? [
