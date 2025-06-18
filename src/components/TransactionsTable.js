@@ -1,20 +1,23 @@
 /* src/components/TransactionsTable.js */
 import React, { useEffect, useState } from 'react';
 
+import { CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon } from '@heroicons/react/24/solid';
+
 const STATUS_STYLES = {
   approved: {
     color: 'bg-green-100 text-green-700',
-    icon: '✅',
+    icon: <CheckCircleIcon className="w-4 h-4" />,
   },
   flagged: {
     color: 'bg-yellow-100 text-yellow-800',
-    icon: '⚠️',
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
   },
   blocked: {
     color: 'bg-red-100 text-red-700',
-    icon: '❌',
+    icon: <XCircleIcon className="w-4 h-4" />,
   },
 };
+
 
 export default function TransactionsTable() {
   const [rows, setRows]     = useState([]);
@@ -91,19 +94,21 @@ export default function TransactionsTable() {
                   <td className="p-3">{txn.recipient || '—'}</td>
                   <td className="p-3">{Number(txn.amount).toLocaleString()}</td>
                   <td className="p-3">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium capitalize ${style.color}`}>
-                      <span>{style.icon}</span>
-                      {txn.status}
-                    </span>
-                  </td>
-                </tr>
-              );
-            })}
-            {displayed.length === 0 && !error && (
-              <tr>
-                <td colSpan={4} className="p-4 text-center text-gray-500">
-                  No transactions match this filter.
-                </td>
+  {(() => {
+    const key = txn.status?.toLowerCase().trim();
+    const { color, icon } = STATUS_STYLES[key] || {
+      color: 'bg-gray-200 text-gray-700',
+      icon: <span className="w-4 h-4">?</span>,
+    };
+
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium capitalize ${color}`}>
+        {icon}
+        {txn.status}
+      </span>
+    );
+  })()}
+</td>
               </tr>
             )}
           </tbody>
