@@ -6,7 +6,20 @@ const STATUS_COLORS = {
   flagged:  'bg-yellow-100 text-yellow-800',
   blocked:  'bg-red-100 text-red-700',
 };
-
+const STATUS_STYLES = {
+  approved: {
+    color: 'bg-green-100 text-green-700',
+    icon: '✅',
+  },
+  flagged: {
+    color: 'bg-yellow-100 text-yellow-800',
+    icon: '⚠️',
+  },
+  blocked: {
+    color: 'bg-red-100 text-red-700',
+    icon: '❌',
+  },
+};
 export default function TransactionsTable() {
   const [rows, setRows]           = useState([]);
   const [filter, setFilter]       = useState('all');      // all | approved | flagged | blocked
@@ -83,13 +96,13 @@ export default function TransactionsTable() {
     <td className="p-3">{Number(txn.amount).toLocaleString()}</td>
     <td className="p-3">
       <span
-        className={
-          `px-2 py-0.5 rounded text-xs font-medium capitalize ` +
-          (STATUS_COLORS[txn.status] ?? 'bg-gray-200 text-gray-700')
-        }
-      >
-        {txn.status}
-      </span>
+  className={
+    `px-2 py-0.5 rounded text-xs font-medium capitalize flex items-center gap-1 ` +
+    (STATUS_STYLES[txn.status]?.color ?? 'bg-gray-200 text-gray-700')
+  }
+>
+  {STATUS_STYLES[txn.status]?.icon} {txn.status}
+</span>
     </td>
   </tr>
 ))}
