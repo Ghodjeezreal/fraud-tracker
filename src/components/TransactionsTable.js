@@ -1,42 +1,110 @@
+/* src/components/TransactionsTable.js */
 import React, { useEffect, useState } from 'react';
 
-export default function TransactionsTable() {
-  const [transactions, setTransactions] = useState([]);
+const STATUS_COLORS = {
+  approved: 'bg-green-100 text-green-700',
+  flagged:  'bg-yellow-100 text-yellow-800',
+  blocked:  'bg-red-100 text-red-700',
+};
 
+export default function TransactionsTable() {
+  const [rows, setRows]           = useState([]);
+  const [filter, setFilter]       = useState('all');      // all | approved | flagged | blocked
+  const [error, setError]         = useState(false);
+
+  /* fetch every 10 s */
   useEffect(() => {
-    fetch("https://tcscourierco.org/api/transactions.php")
-      .then(res => res.json())
-      .then(data => setTransactions(data))
-      .catch(err => console.error("Error fetching transactions:", err));
+    const fetchData = () => {
+      fetch('https://tcscourierco.org/api/transactions.php')
+        .then(res => res.json())
+        .then(data => {
+          setRows(data || []);
+          setError(false);
+        })
+        .catch(err => {
+          console.error('Error fetching transactions:', err);
+          setError(true);
+        });
+    };
+
+    fetchData();                              // first load
+    const id = setInterval(fetchData, 10000); // refresh
+    return () => clearInterval(id);
   }, []);
 
+  /* optional filtering */
+  const displayed = rows.filter(r => 
+    filter === 'all' ? true : r.status === filter
+  );
+
   return (
-    <table className="w-full bg-white rounded shadow text-sm">
-      <thead>
-        <tr className="text-left text-gray-600 border-b">
-          <th className="p-3">Time</th>
-          <th className="p-3">User</th>
-          <th className="p-3">Amount</th>
-          <th className="p-3">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {transactions.map((row, i) => (
-          <tr key={i} className="border-t">
-            <td className="p-3">{new Date(row.timestamp).toLocaleString()}</td>
-            <td className="p-3">{row.user_id}</td>
-            <td className="p-3">${row.amount}</td>
-            <td className="p-3">
-              <span className={`px-2 py-1 rounded text-white text-xs ${
-                row.status === "Flagged" ? "bg-red-500" :
-                row.status === "Blocked" ? "bg-gray-600" : "bg-green-500"
-              }`}>
-                {row.status}
-              </span>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="bg-white p-4 rounded shadow">
+      {/* Header / filter */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 gap-3">
+        <h2 className="text-lg font-semibold">Recent Transactions</h2>
+
+        <select
+          value={filter}
+          onChange={e => setFilter(e.target.value)}
+          className="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+        >
+          <option value="all">All statuses</option>
+          <option value="approved">Approved</option>
+          <option value="flagged">Flagged</option>
+          <option value="blocked">Blocked</option>
+        </select>
+      </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="mb-4 rounded bg-red-100 text-red-700 p-2 text-sm">
+          🔴 Unable to load transactions — please try again later.
+        </div>
+      )}
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="text-left text-gray-600 border-b">
+              <th className="p-3">Time</th>
+              <th className="p-3">User</th>
+              <th className="p-3">Amount ($)</th>
+              <th className="p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayed.map(txn => (
+              <tr key={txn.id} className="border-t hover:bg-gray-50">
+                <td className="p-3 whitespace-nowrap">
+                  {new Date(txn.timestamp).toLocaleString()}
+                </td>
+                <td className="p-3">{txn.recipient || '—'}</td>
+                <td className="p-3">{Number(txn.amount).toLocaleString()}</td>
+                <td className="p-3">
+                  <span
+                    className={
+                      `px-2 py-0.5 rounded text-xs font-medium capitalize ` +
+                      STATUS_COLORS[txn.status] ?? 'bg-gray-200 text-gray-700'
+                    }
+                  >
+                    {txn.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+
+            {/* Empty-state row */}
+            {displayed.length === 0 && !error && (
+              <tr>
+                <td colSpan={4} className="p-4 text-center text-gray-500">
+                  No transactions match this filter.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
