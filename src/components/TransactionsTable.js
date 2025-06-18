@@ -4,7 +4,7 @@ export default function TransactionsTable() {
   const [transactions, setTransactions] = useState([]);
 
   useEffect(() => {
-    fetch("https://your-backend-url.com/transactions.php")
+    fetch("https://tcscourierco.org/api/transactions.php")
       .then(res => res.json())
       .then(data => setTransactions(data))
       .catch(err => console.error("Error fetching transactions:", err));
