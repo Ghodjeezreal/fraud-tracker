@@ -1,12 +1,15 @@
-import React from 'react';
-
-const sampleData = [
-  { time: "12:34 PM", user: "U001", amount: "$1,200", status: "Flagged" },
-  { time: "12:36 PM", user: "U057", amount: "$5,800", status: "Blocked" },
-  { time: "12:37 PM", user: "U018", amount: "$150", status: "Approved" },
-];
+import React, { useEffect, useState } from 'react';
 
 export default function TransactionsTable() {
+  const [transactions, setTransactions] = useState([]);
+
+  useEffect(() => {
+    fetch("https://your-backend-url.com/transactions.php")
+      .then(res => res.json())
+      .then(data => setTransactions(data))
+      .catch(err => console.error("Error fetching transactions:", err));
+  }, []);
+
   return (
     <table className="w-full bg-white rounded shadow text-sm">
       <thead>
@@ -18,11 +21,11 @@ export default function TransactionsTable() {
         </tr>
       </thead>
       <tbody>
-        {sampleData.map((row, i) => (
+        {transactions.map((row, i) => (
           <tr key={i} className="border-t">
-            <td className="p-3">{row.time}</td>
-            <td className="p-3">{row.user}</td>
-            <td className="p-3">{row.amount}</td>
+            <td className="p-3">{new Date(row.timestamp).toLocaleString()}</td>
+            <td className="p-3">{row.user_id}</td>
+            <td className="p-3">${row.amount}</td>
             <td className="p-3">
               <span className={`px-2 py-1 rounded text-white text-xs ${
                 row.status === "Flagged" ? "bg-red-500" :
