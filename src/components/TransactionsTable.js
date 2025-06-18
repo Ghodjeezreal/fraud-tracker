@@ -75,25 +75,24 @@ export default function TransactionsTable() {
           </thead>
           <tbody>
   {displayed.slice(0, 10).map(txn => (
-    <tr key={txn.id} className="border-t hover:bg-gray-50">
-      <td className="p-3 whitespace-nowrap">
-        {new Date(txn.timestamp).toLocaleString()}
-      </td>
-      <td className="p-3">{txn.recipient || '—'}</td>
-      <td className="p-3">{Number(txn.amount).toLocaleString()}</td>
-      <td className="p-3">
-        <span
-          className={
-            `px-2 py-0.5 rounded text-xs font-medium capitalize ` +
-            (STATUS_COLORS[txn.status] ?? 'bg-gray-200 text-gray-700')
-          }
-        >
-          {txn.status}
-        </span>
-      </td>
-    </tr>
-  ))}
-
+  <tr key={txn.id} className="border-t hover:bg-gray-50">
+    <td className="p-3 whitespace-nowrap">
+      {new Date(txn.timestamp).toLocaleString()}
+    </td>
+    <td className="p-3">{txn.recipient || '—'}</td>
+    <td className="p-3">{Number(txn.amount).toLocaleString()}</td>
+    <td className="p-3">
+      <span
+        className={
+          `px-2 py-0.5 rounded text-xs font-medium capitalize ` +
+          (STATUS_COLORS[txn.status] ?? 'bg-gray-200 text-gray-700')
+        }
+      >
+        {txn.status}
+      </span>
+    </td>
+  </tr>
+))}
             {/* Empty-state row */}
             {displayed.length === 0 && !error && (
               <tr>
