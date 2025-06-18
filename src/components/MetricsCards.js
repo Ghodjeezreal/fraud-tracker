@@ -1,39 +1,69 @@
 import React, { useEffect, useState } from 'react';
 
+function useCountUp(to, duration = 1000) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = null;
+    let animationFrame;
+
+    const step = (timestamp) => {
+      if (!start) start = timestamp;
+      const progress = timestamp - start;
+      const value = Math.min(Math.round((progress / duration) * to), to);
+      setCount(value);
+      if (progress < duration) {
+        animationFrame = requestAnimationFrame(step);
+      }
+    };
+
+    requestAnimationFrame(step);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [to, duration]);
+
+  return count;
+}
+
 export default function MetricsCards() {
   const [metrics, setMetrics] = useState(null);
   const [error, setError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   useEffect(() => {
-  let interval;
+    let interval;
 
-  const fetchMetrics = () => {
-    fetch("https://tcscourierco.org/api/metrics.php")
-      .then((res) => res.json())
-      .then((data) => {
-        setMetrics(data);
-        setError(false);
-      })
-      .catch((err) => {
-        console.error("Metrics fetch failed", err);
-        setError(true);
-        setMetrics({ total: 0, flagged: 0, blocked: 0, approved: 0 });
-        setTimeout(() => setError(false), 4000);
-      });
-  };
+    const fetchMetrics = (isInitial = false) => {
+      if (isInitial) setIsLoading(true);
+      fetch("https://tcscourierco.org/api/metrics.php")
+        .then((res) => res.json())
+        .then((data) => {
+          setMetrics(data);
+          setError(false);
+          setIsLoading(false);
+          setHasLoadedOnce(true);
+        })
+        .catch((err) => {
+          console.error("Metrics fetch failed", err);
+          if (!hasLoadedOnce) setError(true); // only show toast if first time fails
+          setIsLoading(false);
+          setMetrics({ total: 0, flagged: 0, blocked: 0, approved: 0 });
+          setTimeout(() => setError(false), 4000);
+        });
+    };
 
-  fetchMetrics(); // Fetch once immediately
-  interval = setInterval(fetchMetrics, 10000); // Then every 10 sec
+    fetchMetrics(true); // Initial load
+    interval = setInterval(() => fetchMetrics(false), 10000); // Every 10 sec
 
-  return () => clearInterval(interval); // Cleanup
-}, []);
+    return () => clearInterval(interval);
+  }, [hasLoadedOnce]);
 
   const metricCards = metrics
     ? [
-        { label: "Total Transactions", value: metrics.total },
-        { label: "Flagged", value: metrics.flagged, color: "text-red-500" },
-        { label: "Blocked", value: metrics.blocked, color: "text-gray-600" },
-        { label: "Approved", value: metrics.approved, color: "text-green-500" },
+        { label: "Total Transactions", value: useCountUp(metrics.total), color: "text-blue-600" },
+        { label: "Flagged", value: useCountUp(metrics.flagged), color: "text-red-500" },
+        { label: "Blocked", value: useCountUp(metrics.blocked), color: "text-gray-600" },
+        { label: "Approved", value: useCountUp(metrics.approved), color: "text-green-500" },
       ]
     : Array(4).fill({});
 
@@ -49,12 +79,12 @@ export default function MetricsCards() {
         {metricCards.map((m, i) => (
           <div key={i} className="p-4 bg-white rounded shadow text-center animate-fade-in">
             <h3 className="text-sm text-gray-500">
-              {metrics ? m.label : (
+              {!isLoading ? m.label : (
                 <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4 mx-auto" />
               )}
             </h3>
             <p className={`text-xl font-bold mt-2 ${m.color || "text-black"}`}>
-              {metrics ? m.value : (
+              {!isLoading ? m.value : (
                 <div className="h-6 bg-gray-300 rounded animate-pulse w-1/2 mx-auto" />
               )}
             </p>
