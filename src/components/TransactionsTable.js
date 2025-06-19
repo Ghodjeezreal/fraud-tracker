@@ -21,7 +21,9 @@ const STATUS_STYLES = {
   },
 };
 
+
 export default function TransactionsTable() {
+  console.log('TransactionsTable mounted');
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState('all');
   const [error, setError] = useState(false);
