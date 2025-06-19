@@ -84,6 +84,7 @@ export default function TransactionsTable() {
           <tbody>
             {displayed.slice(0, 10).map((txn) => {
               const key = txn.status?.toLowerCase().trim();
+               console.log('Status key:', key, 'Raw status:', txn.status);
               const { color, icon } = STATUS_STYLES[key] || {
                 color: 'bg-gray-200 text-gray-700',
                 icon: <span className="w-4 h-4">?</span>,
