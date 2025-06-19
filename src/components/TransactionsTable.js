@@ -1,7 +1,10 @@
 /* src/components/TransactionsTable.js */
 import React, { useEffect, useState } from 'react';
-
-import { CheckCircleIcon, ExclamationTriangleIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import {
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/solid';
 
 const STATUS_STYLES = {
   approved: {
@@ -18,21 +21,20 @@ const STATUS_STYLES = {
   },
 };
 
-
 export default function TransactionsTable() {
-  const [rows, setRows]     = useState([]);
+  const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState('all');
-  const [error, setError]   = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const fetchData = () => {
       fetch('https://tcscourierco.org/api/transactions.php')
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           setRows(data || []);
           setError(false);
         })
-        .catch(err => {
+        .catch((err) => {
           console.error('Error fetching transactions:', err);
           setError(true);
         });
@@ -43,7 +45,7 @@ export default function TransactionsTable() {
     return () => clearInterval(id);
   }, []);
 
-  const displayed = rows.filter(r =>
+  const displayed = rows.filter((r) =>
     filter === 'all' ? true : r.status === filter
   );
 
@@ -53,7 +55,7 @@ export default function TransactionsTable() {
         <h2 className="text-lg font-semibold">Recent Transactions</h2>
         <select
           value={filter}
-          onChange={e => setFilter(e.target.value)}
+          onChange={(e) => setFilter(e.target.value)}
           className="border border-gray-300 rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         >
           <option value="all">All statuses</option>
@@ -80,12 +82,13 @@ export default function TransactionsTable() {
             </tr>
           </thead>
           <tbody>
-            {displayed.slice(0, 10).map(txn => {
+            {displayed.slice(0, 10).map((txn) => {
               const key = txn.status?.toLowerCase().trim();
-              const style = STATUS_STYLES[key] || {
+              const { color, icon } = STATUS_STYLES[key] || {
                 color: 'bg-gray-200 text-gray-700',
-                icon: '❓',
+                icon: <span className="w-4 h-4">?</span>,
               };
+
               return (
                 <tr key={txn.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 whitespace-nowrap">
@@ -94,21 +97,21 @@ export default function TransactionsTable() {
                   <td className="p-3">{txn.recipient || '—'}</td>
                   <td className="p-3">{Number(txn.amount).toLocaleString()}</td>
                   <td className="p-3">
-  {(() => {
-    const key = txn.status?.toLowerCase().trim();
-    const { color, icon } = STATUS_STYLES[key] || {
-      color: 'bg-gray-200 text-gray-700',
-      icon: <span className="w-4 h-4">?</span>,
-    };
-
-    return (
-      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium capitalize ${color}`}>
-        {icon}
-        {txn.status}
-      </span>
-    );
-  })()}
-</td>
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium capitalize ${color}`}
+                    >
+                      {icon}
+                      {txn.status}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+            {displayed.length === 0 && !error && (
+              <tr>
+                <td colSpan={4} className="p-4 text-center text-gray-500">
+                  No transactions match this filter.
+                </td>
               </tr>
             )}
           </tbody>
