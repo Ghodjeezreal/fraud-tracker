@@ -1,4 +1,4 @@
-// src/components/TransactionsTable.js
+/* src/components/TransactionsTable.js */
 import React, { useEffect, useState } from 'react';
 import {
   CheckCircleIcon,
@@ -6,7 +6,24 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/solid';
 
+const STATUS_STYLES = {
+  approved: {
+    color: 'bg-green-100 text-green-700',
+    icon: <CheckCircleIcon className="w-4 h-4" />,
+  },
+  flagged: {
+    color: 'bg-yellow-100 text-yellow-800',
+    icon: <ExclamationTriangleIcon className="w-4 h-4" />,
+  },
+  blocked: {
+    color: 'bg-red-100 text-red-700',
+    icon: <XCircleIcon className="w-4 h-4" />,
+  },
+};
+
+
 export default function TransactionsTable() {
+  console.log('TransactionsTable mounted');
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState('all');
   const [error, setError] = useState(false);
@@ -31,7 +48,7 @@ export default function TransactionsTable() {
   }, []);
 
   const displayed = rows.filter((r) =>
-    filter === 'all' ? true : r.status?.toLowerCase().trim() === filter
+    filter === 'all' ? true : r.status === filter
   );
 
   return (
@@ -68,7 +85,13 @@ export default function TransactionsTable() {
           </thead>
           <tbody>
             {displayed.slice(0, 10).map((txn) => {
-              const status = txn.status?.toLowerCase().trim();
+              const key = txn.status?.toLowerCase().trim();
+               console.log('Status key:', key, 'Raw status:', txn.status);
+              const { color, icon } = STATUS_STYLES[key] || {
+                color: 'bg-gray-200 text-gray-700',
+                icon: <span className="w-4 h-4">?</span>,
+              };
+
               return (
                 <tr key={txn.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 whitespace-nowrap">
@@ -77,29 +100,16 @@ export default function TransactionsTable() {
                   <td className="p-3">{txn.recipient || '—'}</td>
                   <td className="p-3">{Number(txn.amount).toLocaleString()}</td>
                   <td className="p-3">
-                    {status === 'approved' && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium capitalize bg-green-100 text-green-700">
-                        <CheckCircleIcon className="w-4 h-4" />
-                        Approved
-                      </span>
-                    )}
-                    {status === 'flagged' && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium capitalize bg-yellow-100 text-yellow-800">
-                        <ExclamationTriangleIcon className="w-4 h-4" />
-                        Flagged
-                      </span>
-                    )}
-                    {status === 'blocked' && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium capitalize bg-red-100 text-red-700">
-                        <XCircleIcon className="w-4 h-4" />
-                        Blocked
-                      </span>
-                    )}
+                    <span
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium capitalize ${color}`}
+                    >
+                      {icon}
+                      {txn.status}
+                    </span>
                   </td>
                 </tr>
               );
             })}
-
             {displayed.length === 0 && !error && (
               <tr>
                 <td colSpan={4} className="p-4 text-center text-gray-500">
