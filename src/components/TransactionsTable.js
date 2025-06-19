@@ -27,12 +27,23 @@ export default function TransactionsTable() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-  setRows([
-    { id: 1, status: 'approved', ... },
-    { id: 2, status: 'flagged', ... },
-    { id: 3, status: 'blocked', ... },
-  ]);
-}, []);
+    const fetchData = () => {
+      fetch('https://tcscourierco.org/api/transactions.php')
+        .then((res) => res.json())
+        .then((data) => {
+          setRows(data || []);
+          setError(false);
+        })
+        .catch((err) => {
+          console.error('Error fetching transactions:', err);
+          setError(true);
+        });
+    };
+
+    fetchData();
+    const id = setInterval(fetchData, 10000);
+    return () => clearInterval(id);
+  }, []);
 
   const displayed = rows.filter((r) =>
     filter === 'all' ? true : r.status === filter
